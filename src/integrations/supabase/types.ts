@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      movies: {
+        Row: {
+          available_seats: number | null
+          banner_url: string | null
+          certificate: string | null
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          genres: string[] | null
+          id: string
+          languages: string[] | null
+          poster_url: string | null
+          price: number | null
+          rating: number | null
+          release_date: string | null
+          status: Database["public"]["Enums"]["movie_status"] | null
+          title: string
+          updated_at: string | null
+          votes_count: number | null
+        }
+        Insert: {
+          available_seats?: number | null
+          banner_url?: string | null
+          certificate?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          genres?: string[] | null
+          id?: string
+          languages?: string[] | null
+          poster_url?: string | null
+          price?: number | null
+          rating?: number | null
+          release_date?: string | null
+          status?: Database["public"]["Enums"]["movie_status"] | null
+          title: string
+          updated_at?: string | null
+          votes_count?: number | null
+        }
+        Update: {
+          available_seats?: number | null
+          banner_url?: string | null
+          certificate?: string | null
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          genres?: string[] | null
+          id?: string
+          languages?: string[] | null
+          poster_url?: string | null
+          price?: number | null
+          rating?: number | null
+          release_date?: string | null
+          status?: Database["public"]["Enums"]["movie_status"] | null
+          title?: string
+          updated_at?: string | null
+          votes_count?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
