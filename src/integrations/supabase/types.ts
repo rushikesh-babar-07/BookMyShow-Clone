@@ -112,6 +112,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      booking_status: "pending" | "paid" | "cancelled" | "expired"
       movie_status: "now_showing" | "coming_soon" | "ended"
     }
     CompositeTypes: {
@@ -240,6 +241,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      booking_status: ["pending", "paid", "cancelled", "expired"],
       movie_status: ["now_showing", "coming_soon", "ended"],
     },
   },

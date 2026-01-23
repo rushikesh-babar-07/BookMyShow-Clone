@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
-import HeroSection from "@/components/HeroSection";
-import MovieListings from "@/components/MovieListings";
+import HeroSectionDB from "@/components/HeroSectionDB";
+import MovieListingsDB from "@/components/MovieListingsDB";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -8,8 +8,8 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main>
-        <HeroSection />
-        <MovieListings />
+        <HeroSectionDB />
+        <MovieListingsDB />
       </main>
       <Footer />
     </div>
