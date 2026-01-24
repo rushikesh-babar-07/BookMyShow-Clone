@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Star, Clock, MapPin, CreditCard, Loader2, Check } from "lucide-react";
 import { format } from "date-fns";
+import SeatSelection from "./SeatSelection";
 
 interface PreselectedData {
   theaterId: string;
@@ -32,19 +33,25 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
   const { createBooking, processPayment, loading } = useBooking();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState<"select" | "confirm" | "payment" | "success">("select");
-  const [selectedSeats, setSelectedSeats] = useState("1");
+  const [step, setStep] = useState<"select" | "seats" | "confirm" | "payment" | "success">("select");
+  const [selectedSeatCount, setSelectedSeatCount] = useState("1");
+  const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
   const [bookingId, setBookingId] = useState<string | null>(null);
 
   const price = preselectedData?.price || movie?.price || 250;
-  const totalAmount = price * parseInt(selectedSeats);
+  const totalAmount = price * parseInt(selectedSeatCount);
 
-  const handleProceedToConfirm = () => {
+  const handleProceedToSeats = () => {
     if (!user) {
       onOpenChange(false);
       navigate("/login");
       return;
     }
+    setStep("seats");
+  };
+
+  const handleSeatsSelected = (seats: string[]) => {
+    setSelectedSeatIds(seats);
     setStep("confirm");
   };
 
@@ -54,10 +61,11 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
     const booking = await createBooking({
       movieId: movie.id,
       movieTitle: movie.title,
-      seats: parseInt(selectedSeats),
+      seats: parseInt(selectedSeatCount),
       showDate: preselectedData.date,
       showTime: preselectedData.time,
       totalAmount,
+      seatIds: selectedSeatIds,
     });
 
     if (booking) {
@@ -77,7 +85,8 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
 
   const handleClose = () => {
     setStep("select");
-    setSelectedSeats("1");
+    setSelectedSeatCount("1");
+    setSelectedSeatIds([]);
     setBookingId(null);
     onOpenChange(false);
   };
@@ -98,11 +107,11 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-card border-border max-w-md">
+      <DialogContent className={`bg-card border-border ${step === "seats" ? "max-w-2xl" : "max-w-md"}`}>
         {step === "select" && (
           <>
             <DialogHeader>
-              <DialogTitle className="text-foreground">Select Seats</DialogTitle>
+              <DialogTitle className="text-foreground">How Many Seats?</DialogTitle>
               <DialogDescription className="text-muted-foreground">
                 {movie.title}
               </DialogDescription>
@@ -150,15 +159,15 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
 
               {/* Seats Selection */}
               <div className="space-y-2">
-                <Label className="text-foreground">Number of Seats</Label>
-                <Select value={selectedSeats} onValueChange={setSelectedSeats}>
+                <Label className="text-foreground">Number of Tickets</Label>
+                <Select value={selectedSeatCount} onValueChange={setSelectedSeatCount}>
                   <SelectTrigger className="bg-secondary border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                       <SelectItem key={num} value={num.toString()}>
-                        {num} {num === 1 ? "seat" : "seats"}
+                        {num} {num === 1 ? "ticket" : "tickets"}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -173,13 +182,31 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
             </div>
 
             <DialogFooter>
-              <Button
-                onClick={handleProceedToConfirm}
-                className="w-full"
-              >
-                {user ? "Proceed to Confirm" : "Sign in to Book"}
+              <Button onClick={handleProceedToSeats} className="w-full">
+                {user ? "Select Seats" : "Sign in to Book"}
               </Button>
             </DialogFooter>
+          </>
+        )}
+
+        {step === "seats" && preselectedData && (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Select Your Seats</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                {preselectedData.theaterName} • {preselectedData.time}
+              </DialogDescription>
+            </DialogHeader>
+
+            <SeatSelection
+              movieId={movieId}
+              theaterId={preselectedData.theaterId}
+              showDate={preselectedData.date}
+              showTime={preselectedData.time}
+              maxSeats={parseInt(selectedSeatCount)}
+              onSeatsSelected={handleSeatsSelected}
+              onBack={() => setStep("select")}
+            />
           </>
         )}
 
@@ -212,7 +239,9 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Seats</span>
-                  <span className="text-foreground">{selectedSeats}</span>
+                  <span className="text-foreground font-medium text-primary">
+                    {selectedSeatIds.sort().join(", ")}
+                  </span>
                 </div>
                 <div className="flex justify-between pt-3 border-t border-border">
                   <span className="text-foreground font-medium">Total</span>
@@ -222,7 +251,7 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
             </Card>
 
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setStep("select")} className="flex-1">
+              <Button variant="outline" onClick={() => setStep("seats")} className="flex-1">
                 Back
               </Button>
               <Button onClick={handleCreateBooking} disabled={loading} className="flex-1">
@@ -247,6 +276,9 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
                 <CreditCard className="h-8 w-8 text-primary" />
               </div>
               <p className="text-2xl font-bold text-foreground mb-2">₹{totalAmount}</p>
+              <p className="text-sm text-muted-foreground mb-2">
+                Seats: <span className="font-medium text-primary">{selectedSeatIds.sort().join(", ")}</span>
+              </p>
               <p className="text-sm text-muted-foreground">
                 Click below to simulate payment processing
               </p>
@@ -277,14 +309,19 @@ const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingM
             </DialogHeader>
 
             <div className="py-6 text-center">
-              <div className="w-16 h-16 mx-auto bg-accent/20 rounded-full flex items-center justify-center mb-4">
-                <Check className="h-8 w-8 text-accent-foreground" />
+              <div className="w-16 h-16 mx-auto bg-primary/20 rounded-full flex items-center justify-center mb-4">
+                <Check className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 Thank you for your booking!
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mb-2">
                 Your tickets for {movie.title} have been booked successfully.
+              </p>
+              <p className="text-sm font-medium text-primary">
+                Seats: {selectedSeatIds.sort().join(", ")}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
                 Check your email for confirmation.
               </p>
             </div>

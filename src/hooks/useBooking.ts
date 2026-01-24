@@ -10,6 +10,7 @@ interface BookingDetails {
   showDate: string;
   showTime: string;
   totalAmount: number;
+  seatIds?: string[];
 }
 
 export const useBooking = () => {

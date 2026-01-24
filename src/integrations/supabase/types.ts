@@ -64,6 +64,57 @@ export type Database = {
           },
         ]
       }
+      movie_showtimes: {
+        Row: {
+          available_seats: number | null
+          created_at: string | null
+          id: string
+          movie_id: string
+          price: number | null
+          show_date: string
+          show_times: string[]
+          theater_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          available_seats?: number | null
+          created_at?: string | null
+          id?: string
+          movie_id: string
+          price?: number | null
+          show_date: string
+          show_times?: string[]
+          theater_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          available_seats?: number | null
+          created_at?: string | null
+          id?: string
+          movie_id?: string
+          price?: number | null
+          show_date?: string
+          show_times?: string[]
+          theater_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movie_showtimes_movie_id_fkey"
+            columns: ["movie_id"]
+            isOneToOne: false
+            referencedRelation: "movies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movie_showtimes_theater_id_fkey"
+            columns: ["theater_id"]
+            isOneToOne: false
+            referencedRelation: "theaters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       movies: {
         Row: {
           available_seats: number | null
@@ -151,6 +202,39 @@ export type Database = {
           phone?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      theaters: {
+        Row: {
+          address: string | null
+          amenities: string[] | null
+          city: string
+          created_at: string | null
+          id: string
+          location: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          amenities?: string[] | null
+          city?: string
+          created_at?: string | null
+          id?: string
+          location: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          amenities?: string[] | null
+          city?: string
+          created_at?: string | null
+          id?: string
+          location?: string
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
