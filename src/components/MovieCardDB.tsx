@@ -2,7 +2,7 @@ import { Star, Heart, Play } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import BookingModal from "./BookingModal";
+import TheaterShowtimes from "./TheaterShowtimes";
 import { Tables } from "@/integrations/supabase/types";
 
 type Movie = Tables<"movies">;
@@ -13,7 +13,7 @@ interface MovieCardProps {
 
 const MovieCard = ({ movie }: MovieCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
-  const [showBooking, setShowBooking] = useState(false);
+  const [showTheaters, setShowTheaters] = useState(false);
 
   const formatVotes = (votes: number | null) => {
     if (!votes) return "0";
@@ -52,15 +52,15 @@ const MovieCard = ({ movie }: MovieCardProps) => {
             />
           </button>
 
-          {/* Book Now Button - Visible on Hover */}
+          {/* Book Tickets Button - Visible on Hover */}
           <div className="absolute inset-x-3 bottom-14 opacity-0 group-hover:opacity-100 transition-all duration-300">
             <Button 
-              onClick={() => setShowBooking(true)}
+              onClick={() => setShowTheaters(true)}
               className="w-full gap-2"
               size="sm"
             >
               <Play className="h-4 w-4 fill-current" />
-              Book Now
+              Book Tickets
             </Button>
           </div>
 
@@ -94,10 +94,11 @@ const MovieCard = ({ movie }: MovieCardProps) => {
         </div>
       </div>
 
-      <BookingModal
+      <TheaterShowtimes
         movieId={movie.id}
-        open={showBooking}
-        onOpenChange={setShowBooking}
+        movieTitle={movie.title}
+        open={showTheaters}
+        onOpenChange={setShowTheaters}
       />
     </>
   );

@@ -4,22 +4,29 @@ import { useMovie } from "@/hooks/useMovies";
 import { useBooking } from "@/hooks/useBooking";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Star, Clock, Calendar, CreditCard, Loader2, Check } from "lucide-react";
-import { format, addDays } from "date-fns";
+import { Star, Clock, MapPin, CreditCard, Loader2, Check } from "lucide-react";
+import { format } from "date-fns";
+
+interface PreselectedData {
+  theaterId: string;
+  theaterName: string;
+  date: string;
+  time: string;
+  price: number;
+}
 
 interface BookingModalProps {
   movieId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preselectedData?: PreselectedData;
 }
 
-const showTimes = ["10:00 AM", "1:30 PM", "4:45 PM", "8:00 PM", "10:30 PM"];
-
-const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
+const BookingModal = ({ movieId, open, onOpenChange, preselectedData }: BookingModalProps) => {
   const { movie, loading: movieLoading } = useMovie(movieId);
   const { user } = useAuth();
   const { createBooking, processPayment, loading } = useBooking();
@@ -27,20 +34,10 @@ const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
 
   const [step, setStep] = useState<"select" | "confirm" | "payment" | "success">("select");
   const [selectedSeats, setSelectedSeats] = useState("1");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
   const [bookingId, setBookingId] = useState<string | null>(null);
 
-  // Generate next 7 days for date selection
-  const availableDates = Array.from({ length: 7 }, (_, i) => {
-    const date = addDays(new Date(), i);
-    return {
-      value: format(date, "yyyy-MM-dd"),
-      label: format(date, "EEE, MMM d"),
-    };
-  });
-
-  const totalAmount = movie?.price ? Number(movie.price) * parseInt(selectedSeats) : 0;
+  const price = preselectedData?.price || movie?.price || 250;
+  const totalAmount = price * parseInt(selectedSeats);
 
   const handleProceedToConfirm = () => {
     if (!user) {
@@ -48,20 +45,18 @@ const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
       navigate("/login");
       return;
     }
-    if (selectedDate && selectedTime) {
-      setStep("confirm");
-    }
+    setStep("confirm");
   };
 
   const handleCreateBooking = async () => {
-    if (!movie) return;
+    if (!movie || !preselectedData) return;
 
     const booking = await createBooking({
       movieId: movie.id,
       movieTitle: movie.title,
       seats: parseInt(selectedSeats),
-      showDate: selectedDate,
-      showTime: selectedTime,
+      showDate: preselectedData.date,
+      showTime: preselectedData.time,
       totalAmount,
     });
 
@@ -83,8 +78,6 @@ const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
   const handleClose = () => {
     setStep("select");
     setSelectedSeats("1");
-    setSelectedDate("");
-    setSelectedTime("");
     setBookingId(null);
     onOpenChange(false);
   };
@@ -109,7 +102,7 @@ const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
         {step === "select" && (
           <>
             <DialogHeader>
-              <DialogTitle className="text-foreground">Book Tickets</DialogTitle>
+              <DialogTitle className="text-foreground">Select Seats</DialogTitle>
               <DialogDescription className="text-muted-foreground">
                 {movie.title}
               </DialogDescription>
@@ -133,46 +126,27 @@ const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
                     <Clock className="h-3.5 w-3.5" />
                     <span>{movie.duration_minutes} mins</span>
                   </div>
-                  <p className="text-sm text-primary mt-2 font-medium">₹{movie.price}/ticket</p>
                 </div>
               </div>
 
-              {/* Date Selection */}
-              <div className="space-y-2">
-                <Label className="text-foreground">Select Date</Label>
-                <Select value={selectedDate} onValueChange={setSelectedDate}>
-                  <SelectTrigger className="bg-secondary border-border">
-                    <SelectValue placeholder="Choose a date" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableDates.map((date) => (
-                      <SelectItem key={date.value} value={date.value}>
-                        {date.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Time Selection */}
-              <div className="space-y-2">
-                <Label className="text-foreground">Select Show Time</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {showTimes.map((time) => (
-                    <button
-                      key={time}
-                      onClick={() => setSelectedTime(time)}
-                      className={`px-3 py-2 text-sm rounded border transition-colors ${
-                        selectedTime === time
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-secondary text-foreground border-border hover:border-primary"
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Selected Theater & Time Info */}
+              {preselectedData && (
+                <Card className="bg-secondary border-border">
+                  <CardContent className="p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-foreground">{preselectedData.theaterName}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{format(new Date(preselectedData.date), "EEE, MMM d, yyyy")}</span>
+                      <span className="font-medium text-foreground">{preselectedData.time}</span>
+                    </div>
+                    <div className="text-sm text-primary font-medium">
+                      ₹{preselectedData.price}/ticket
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Seats Selection */}
               <div className="space-y-2">
@@ -201,7 +175,6 @@ const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
             <DialogFooter>
               <Button
                 onClick={handleProceedToConfirm}
-                disabled={!selectedDate || !selectedTime}
                 className="w-full"
               >
                 {user ? "Proceed to Confirm" : "Sign in to Book"}
@@ -210,7 +183,7 @@ const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
           </>
         )}
 
-        {step === "confirm" && (
+        {step === "confirm" && preselectedData && (
           <>
             <DialogHeader>
               <DialogTitle className="text-foreground">Confirm Booking</DialogTitle>
@@ -226,12 +199,16 @@ const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
                   <span className="text-foreground font-medium">{movie.title}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">Theater</span>
+                  <span className="text-foreground">{preselectedData.theaterName}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">Date</span>
-                  <span className="text-foreground">{format(new Date(selectedDate), "EEE, MMM d, yyyy")}</span>
+                  <span className="text-foreground">{format(new Date(preselectedData.date), "EEE, MMM d, yyyy")}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Time</span>
-                  <span className="text-foreground">{selectedTime}</span>
+                  <span className="text-foreground">{preselectedData.time}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Seats</span>
@@ -300,8 +277,8 @@ const BookingModal = ({ movieId, open, onOpenChange }: BookingModalProps) => {
             </DialogHeader>
 
             <div className="py-6 text-center">
-              <div className="w-16 h-16 mx-auto bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-                <Check className="h-8 w-8 text-green-500" />
+              <div className="w-16 h-16 mx-auto bg-accent/20 rounded-full flex items-center justify-center mb-4">
+                <Check className="h-8 w-8 text-accent-foreground" />
               </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 Thank you for your booking!
