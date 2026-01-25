@@ -67,6 +67,7 @@ export type Database = {
       movie_showtimes: {
         Row: {
           available_seats: number | null
+          booked_seats: string[] | null
           created_at: string | null
           id: string
           movie_id: string
@@ -78,6 +79,7 @@ export type Database = {
         }
         Insert: {
           available_seats?: number | null
+          booked_seats?: string[] | null
           created_at?: string | null
           id?: string
           movie_id: string
@@ -89,6 +91,7 @@ export type Database = {
         }
         Update: {
           available_seats?: number | null
+          booked_seats?: string[] | null
           created_at?: string | null
           id?: string
           movie_id?: string
