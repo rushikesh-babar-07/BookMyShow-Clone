@@ -12,7 +12,7 @@ export const movies: Movie[] = [
   {
     id: 1,
     title: "Pushpa 2: The Rule",
-    poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop",
+    poster: "https://res.cloudinary.com/dyscn3fdd/image/upload/v1769324272/Pushpa_2_o7jj0c.jpg",
     rating: 8.6,
     votes: "245.5K",
     genres: ["Action", "Drama"],
